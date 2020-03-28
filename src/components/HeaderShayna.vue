@@ -92,7 +92,10 @@ export default {
       this.keranjangUser.splice(index, 1);
       const parsed = JSON.stringify(this.keranjangUser);
       localStorage.setItem("keranjangUser", parsed);
-    }
+      window.location.reload();
+      // eslint-disable-next-line no-console
+      // console.log(index);
+    },
   },
   mounted() {
     if (localStorage.getItem("keranjangUser")) {
@@ -105,7 +108,7 @@ export default {
   },
   computed: {
     totalHarga() {
-      return this.keranjangUser.reduce(function(items, data){
+      return this.keranjangUser.reduce(function(items, data) {
         return items + data.price;
       }, 0);
     }

@@ -37,7 +37,6 @@
                       </tr>
                     </thead>
                     <tbody>
-
                       <tr v-for="keranjang in keranjangUser" :key="keranjang.id">
                         <td class="cart-pic first-row">
                           <img class="img-cart" :src="keranjang.photo" />
@@ -46,13 +45,12 @@
                           <h5>{{ keranjang.name }}</h5>
                         </td>
                         <td class="p-price first-row">${{ keranjang.price }}</td>
-                        <td @click="removeItem(keranjangUser.index)" class="delete-item">
+                        <td @click="removeItem(keranjang.id)" class="delete-item">
                           <a href="#">
                             <i class="material-icons">close</i>
                           </a>
                         </td>
                       </tr>
-                      
                     </tbody>
                   </table>
                 </div>
@@ -69,6 +67,7 @@
                         id="namaLengkap"
                         aria-describedby="namaHelp"
                         placeholder="Masukan Nama"
+                        v-model="customerInfo.name"
                       />
                     </div>
                     <div class="form-group">
@@ -79,6 +78,7 @@
                         id="emailAddress"
                         aria-describedby="emailHelp"
                         placeholder="Masukan Email"
+                        v-model="customerInfo.email"
                       />
                     </div>
                     <div class="form-group">
@@ -89,11 +89,17 @@
                         id="noHP"
                         aria-describedby="noHPHelp"
                         placeholder="Masukan No. HP"
+                        v-model="customerInfo.number"
                       />
                     </div>
                     <div class="form-group">
                       <label for="alamatLengkap">Alamat Lengkap</label>
-                      <textarea class="form-control" id="alamatLengkap" rows="3"></textarea>
+                      <textarea
+                        class="form-control"
+                        id="alamatLengkap"
+                        rows="3"
+                        v-model="customerInfo.address"
+                      ></textarea>
                     </div>
                   </form>
                 </div>
@@ -115,11 +121,11 @@
                     </li>
                     <li class="subtotal mt-3">
                       Pajak
-                      <span>10%</span>
+                      <span>10% ${{ ditambahPajak }}.00</span>
                     </li>
                     <li class="subtotal mt-3">
                       Total Biaya
-                      <span>${{ totalHarga*10/100 }}.00</span>
+                      <span>${{ totalBiaya }}.00</span>
                     </li>
                     <li class="subtotal mt-3">
                       Bank Transfer
@@ -134,7 +140,9 @@
                       <span>Shayna</span>
                     </li>
                   </ul>
-                  <router-link to="/success"><a href="#" class="proceed-btn">I ALREADY PAID</a></router-link>
+                  <!-- <router-link to="/success"> -->
+                  <a @click="checkout()" href="#" class="proceed-btn">I ALREADY PAID</a>
+                  <!-- </router-link> -->
                 </div>
               </div>
             </div>
@@ -148,22 +156,64 @@
 
 <script>
 import HeaderShayna from "@/components/HeaderShayna.vue";
+import axios from "axios";
 
 export default {
   name: "cart",
   components: {
-      HeaderShayna
+    HeaderShayna
   },
   data() {
     return {
-      keranjangUser: []
+      keranjangUser: [],
+      customerInfo: {
+        name: "",
+        email: "",
+        number: "",
+        address: ""
+      }
     };
   },
   methods: {
-    removeItem(index) {
+    removeItem(xx) {
+      // this.keranjangUser.splice(index, 1);
+      // const parsed = JSON.stringify(this.keranjangUser);
+      // localStorage.setItem("keranjangUser", parsed);
+      // window.location.reload();
+      let faveGifs = JSON.parse(localStorage.getItem("keranjangUser"));
+      let faveGif = faveGifs.map(faveGif => faveGif.id);
+      let index = faveGif.findIndex(id => id == xx);
       this.keranjangUser.splice(index, 1);
       const parsed = JSON.stringify(this.keranjangUser);
-      localStorage.setItem('keranjangUser', parsed);
+      localStorage.setItem("keranjangUser", parsed);
+      window.location.reload();
+      // eslint-disable-next-line no-console
+      console.log(index);
+    },
+    // fungsi mengirim data ke API
+    checkout() {
+      let productIds = this.keranjangUser.map(function(product) {
+        return product.id;
+      });
+
+      let checkoutData = {
+        name: this.customerInfo.name,
+        email: this.customerInfo.email,
+        number: this.customerInfo.number,
+        address: this.customerInfo.address,
+        transaction_total: this.totalBiaya,
+        transaction_status: "PENDING",
+        transaction_details: productIds
+      };
+
+      axios
+        .post(
+          "http://shayna-backend.belajarkoding.com/api/checkout",
+          checkoutData
+        )
+        .then(() => this.$router.push("success"))
+        // eslint-disable-next-line no-console
+        .catch(err => console.log(err));
     }
   },
   mounted() {
@@ -177,9 +227,15 @@ export default {
   },
   computed: {
     totalHarga() {
-      return this.keranjangUser.reduce(function(items, data){
+      return this.keranjangUser.reduce(function(items, data) {
         return items + data.price;
       }, 0);
+    },
+    ditambahPajak() {
+      return (this.totalHarga * 10) / 100;
+    },
+    totalBiaya() {
+      return this.totalHarga + this.ditambahPajak;
     }
   }
 };
