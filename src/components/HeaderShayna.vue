@@ -46,7 +46,7 @@
                               <h6>{{ keranjang.name }}</h6>
                             </div>
                           </td>
-                          <td @click="removeItem(keranjangUser.index)" class="si-close">
+                          <td @click="removeItem(keranjang.id)" class="si-close">
                             <i class="ti-close"></i>
                           </td>
                         </tr>
@@ -88,13 +88,20 @@ export default {
     };
   },
   methods: {
-    removeItem(index) {
+    removeItem(xx) {
+      // this.keranjangUser.splice(index, 1);
+      // const parsed = JSON.stringify(this.keranjangUser);
+      // localStorage.setItem("keranjangUser", parsed);
+      // window.location.reload();
+      let faveGifs = JSON.parse(localStorage.getItem("keranjangUser"));
+      let faveGif = faveGifs.map(faveGif => faveGif.id);
+      let index = faveGif.findIndex(id => id == xx);
       this.keranjangUser.splice(index, 1);
       const parsed = JSON.stringify(this.keranjangUser);
       localStorage.setItem("keranjangUser", parsed);
       window.location.reload();
       // eslint-disable-next-line no-console
-      // console.log(index);
+      console.log(index);
     },
   },
   mounted() {
